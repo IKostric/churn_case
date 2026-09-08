@@ -5,6 +5,7 @@ Predicts `avgang_6mnd` — whether a customer left in Jan–Jun 2026 — from th
 `teknisk_case_data/`, so the pipeline runs straight from a clone.
 
 Findings and business reading: [`report.pdf`](report.pdf).
+Presentation: [`slides.pdf`](slides.pdf).
 
 ## Running
 
@@ -64,6 +65,7 @@ src/
 tests/                 leakage, cleaning, engagement seasonality, clustering
 teknisk_case_data/     the four delivered CSVs, unmodified
 report.pdf             the report, rendered from Markdown kept outside the repo
+slides.pdf             the presentation, built from LaTeX kept outside the repo
 ```
 
 Feature sets: `main` (23 structured features), `main_text` (`main` + TF-IDF),
