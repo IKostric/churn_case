@@ -216,3 +216,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Written by the pipeline; rebuild with `python -m src.pipeline run-all`.
+# Only outputs/figures is tracked, because the report embeds those files.
+outputs/*
+!outputs/figures/
