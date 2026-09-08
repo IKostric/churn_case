@@ -218,9 +218,23 @@ __marimo__/
 .streamlit/secrets.toml
 
 # Written by the pipeline; rebuild with `python -m src.pipeline run-all`.
-# Only outputs/figures is tracked, because the report embeds those files.
 outputs/*
+
+# Kept: the figures the report embeds.
 !outputs/figures/
+
+# Kept: the embedding and topic-label artefacts. These are the expensive ones -
+# embedding every inquiry needs the model download, and the labels need a local
+# LLM served on the side - so tracking them lets `run-all` reuse the caches
+# instead of recomputing. A negation cannot reach into an ignored directory,
+# hence the un-ignore/re-ignore pairs.
+!outputs/features/
+outputs/features/*
+!outputs/features/inquiry_embeddings.parquet
+!outputs/features/inquiry_embeddings.meta.json
+!outputs/metrics/
+outputs/metrics/*
+!outputs/metrics/cluster_*
 
 # The rendered report is the deliverable; its Markdown source and the pandoc
 # recipe that builds it are not tracked.

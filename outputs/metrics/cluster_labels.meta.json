@@ -1,0 +1,9 @@
+{
+  "representatives_digest": "f59dc6962271a7fe",
+  "n_clusters": 16,
+  "n_representatives": 15,
+  "embedding_model": "Qwen/Qwen3-Embedding-0.6B",
+  "embedding_dim": 256,
+  "backend": "auto",
+  "served_model": "qwen3:8b"
+}

@@ -1,0 +1,17 @@
+cluster,method,name,description,cluster_key
+0,served_llm,App Overview,Customers praise the new app's improved overview features.,cluster_00
+1,served_llm,Payment App Crash,Customers report the app crashing when approving payments despite attempting reinstallations.,cluster_01
+2,served_llm,Loan Rate Discrepancy,Customers are confused about why their loan's interest rate is higher than new customers' rates.,cluster_02
+3,served_llm,Program Cost Evaluation,Customers assessing whether the monthly fee for the customer program is justified by its included benefits.,cluster_03
+4,served_llm,Child Savings Setup,Customers seeking guidance on establishing savings accounts for their children.,cluster_04
+5,served_llm,Long-term Fund Recommendations,Customers request an overview of the bank's recommended funds for long-term savings.,cluster_05
+6,served_llm,BankID Login Issues,Customers are unable to log in to the mobile bank using BankID as the app freezes during authentication.,cluster_06
+7,served_llm,BSU vs Savings,Customers are comparing BSU and aksjesparekonto to determine which option is more beneficial.,cluster_07
+8,served_llm,Unused Program Fee,Customers are paying a monthly fee for a customer program they rarely use.,cluster_08
+9,served_llm,Rate Increase,Customers seeking explanation of the September 1st interest rate hike and expressing concern about its impact.,cluster_09
+10,served_llm,Instant Payment Failure,Customers report failed instant payments with unknown error messages and urgent need for resolution.,cluster_10
+11,served_llm,Mortgage Refinancing,Customers thank advisors for assistance with refinancing processes.,cluster_11
+12,served_llm,Unrecognized Fees,Customers are asking to check fees they don't recognize on their statements.,cluster_12
+13,served_llm,Mortgage Rate Comparison,"Customers seeking to discuss mortgage loan terms, noting their interest rate appears higher than Danske Bank's.",cluster_13
+14,served_llm,Fees and Pricing,Inquiries regarding the fees involved in closing a customer account.,cluster_14
+15,served_llm,Enrollment and Pricing,Inquiries about enrolling in the customer program and associated costs.,cluster_15
