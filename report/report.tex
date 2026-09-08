@@ -1,0 +1,21 @@
+\usepackage[a4paper,margin=2.3cm]{geometry}
+\usepackage{microtype}
+% \linewidth rather than \textwidth so an image inside a column scales to the
+% column, not to the full page.
+\setkeys{Gin}{width=0.85\linewidth,keepaspectratio}
+% \captionof, for captioning a figure that columns.lua has taken out of a float.
+\usepackage{capt-of}
+% A minipage resets \parskip to 0pt, which runs the paragraphs of a text column
+% together. Remember the body value so columns.lua can restore it per column.
+\newlength{\bodyparskip}
+\AtBeginDocument{\setlength{\bodyparskip}{\parskip}}
+
+% A minimal left-aligned masthead instead of the class's centred title block,
+% which reserves a third of the first page for two lines of text.
+\usepackage{titling}
+\setlength{\droptitle}{-3.2cm}
+\pretitle{\begin{flushleft}\LARGE\bfseries}
+% negative skip closes the gap the class leaves under the title block
+\posttitle{\par\end{flushleft}\vspace{-1.2em}}
+\preauthor{}\postauthor{}
+\predate{}\postdate{}
