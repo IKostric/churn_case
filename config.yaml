@@ -1,0 +1,98 @@
+seed: 42
+data_dir: teknisk_case_data
+output_dir: outputs
+
+# Columns that must never reach a model. avslutningsgebyr is populated only for
+# customers who already churned; antall_produkter_naa is dated at file-extraction
+# time, not the snapshot date (see README).
+leakage_columns:
+  - antall_produkter_naa
+  - avslutningsgebyr
+
+features:
+  # Inquiry *metadata* (counts, recency, channel mix) lives in the `main` set so
+  # that the text experiment isolates the value of message *content*. See README.
+  include_inquiry_metadata_in_main: true
+
+engagement:
+  period_start: "2024-01"
+  period_end: "2025-12"
+  epsilon: 1.0
+
+
+text:
+  prepend_channel_token: true
+  min_df: 5
+  max_df: 0.8
+  ngram_range: [1, 2]
+  max_features: 20000
+  svd_components: 64
+
+clusters:
+  # Multilingual embeddings, run locally. Matryoshka-truncated to keep the
+  # vectors small; 1024 is the model's full width.
+  embedding_model: Qwen/Qwen3-Embedding-0.6B
+  embedding_dim: 256
+  batch_size: 32
+  device: null            # null -> mps on Apple silicon, else cuda, else cpu
+  k_candidates: [8, 12, 16]
+  silhouette_sample: 4000
+  n_representatives: 15
+  annotation:
+    # Cluster names are interpretation only - they never reach a model.
+    # auto: use `served` when base_url is set, else deterministic
+    # term-frequency labels.
+    backend: auto         # auto | served | tfidf
+    # Qwen3 is a hybrid-reasoning model: it spends a few hundred tokens
+    # thinking before answering, so the budget has to cover both. At 120 it
+    # never reaches the JSON (finish_reason=length, empty content); at 1200
+    # the hardest cluster still overran. Prompts are ~700 tokens, so 2500
+    # stays inside Ollama's 4096 default context.
+    max_new_tokens: 2500
+    served:
+      # Ollama on Apple silicon (`brew install ollama; ollama pull qwen3:8b`).
+      # Any OpenAI-compatible server works here - vLLM
+      # (`vllm serve Qwen/Qwen3-8B`) on a CUDA host, LM Studio, llama.cpp.
+      # vLLM ships Linux-only wheels, so it cannot host this on a Mac.
+      base_url: http://localhost:11434/v1
+      model: qwen3:8b
+      api_key_env: VLLM_API_KEY
+      timeout_seconds: 600  # reasoning tokens make each call slow on an M1
+      # Ollama returns reasoning in a separate `reasoning` field, so `content`
+      # is already clean. `think: false` and chat_template_kwargs are NOT
+      # honoured on its /v1 endpoint (native /api/chat only) - budget instead.
+      extra_body: {}
+
+split:
+  n_splits: 5          # 1 fold held out as test -> 20% test
+  test_fold: 0
+
+logistic:
+  max_iter: 2000
+  cv_folds: 3
+  c_grid: [0.1, 1.0, 10.0]
+
+catboost:
+  iterations: 600
+  early_stopping_rounds: 50
+  # Never ship a model with too few trees to be calibrated, even if early
+  # stopping fires immediately on a small or low-signal subset.
+  min_iterations: 100
+  param_grid:
+    depth: [4, 6]
+    learning_rate: [0.05, 0.1]
+  l2_leaf_reg: 3.0
+
+evaluation:
+  k_values: [0.01, 0.02, 0.05, 0.10, 0.15, 0.20, 0.30]
+  headline_k: 0.10        # the comparison table is reported at this capacity
+
+
+
+experiments:
+  # Reported in this order: linear baseline, then the tree model, then the two
+  # ways of adding inquiry text on top of it.
+  - [logistic, main]
+  - [catboost, main]
+  - [catboost, main_text]
+  - [catboost, main_clusters]

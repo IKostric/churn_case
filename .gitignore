@@ -216,3 +216,13 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Written by the pipeline; rebuild with `python -m src.pipeline run-all`.
+# Only outputs/figures is tracked, because the report embeds those files.
+outputs/*
+!outputs/figures/
+
+# The rendered report is the deliverable; its Markdown source and the pandoc
+# recipe that builds it are not tracked.
+SUMMARY.md
+report/
