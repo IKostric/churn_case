@@ -40,10 +40,19 @@ def build_customer_features(kunder: pd.DataFrame, leakage_columns: list[str]) ->
     df["log_laanebalanse"] = np.log1p(df.pop("laanebalanse"))
     df["log_innskudd"] = np.log1p(df["innskudd"])
 
-    # rente_boliglaan is missing exactly when there is no loan, so the
-    # indicator carries the information the NaN would otherwise hide.
     df["har_laan"] = (df["log_laanebalanse"] > 0).astype(float)
     df["har_innskudd"] = (df.pop("innskudd") > 0).astype(float)
+
+    # rente_boliglaan is missing in exactly the rows where har_laan is 0, so the
+    # absence is structural, not unknown data: a customer without a mortgage
+    # pays no mortgage interest. Filling 0 states that, and har_laan already
+    # separates them from borrowers, so the model can still price the two groups
+    # apart. Leaving it NaN would instead have it imputed as though a rate
+    # existed and had merely gone unrecorded.
+    structural = df["rente_boliglaan"].isna()
+    assert structural.equals(df["har_laan"].eq(0)), \
+        "rente_boliglaan is missing outside the no-loan rows - check the extract"
+    df["rente_boliglaan"] = df["rente_boliglaan"].fillna(0.0)
 
     logger.info("customer features: %d rows, %d columns", len(df), df.shape[1] - 1)
     return df

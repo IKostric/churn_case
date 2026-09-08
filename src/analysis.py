@@ -28,12 +28,32 @@ MODEL_TARGET = "target"
 logger = logging.getLogger(__name__)
 
 
+# How a missing value in each feature is dealt with. Anything not named here
+# either has no missing values or falls to DEFAULT_MISSING.
+STRUCTURAL_MISSING = {
+    "rente_boliglaan": "structural: no mortgage, so filled 0 at build; har_laan flags it",
+    "alder": "implausible ages (<18, >100) set to NaN, then " ,
+    "days_since_last_inquiry": "structural: never contacted, so filled 730 days "
+                               "(the log window); n_inquiries flags it",
+}
+DEFAULT_MISSING = "median + indicator (logistic); native NaN split (CatBoost)"
+
+
 def numeric_summary(df: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
-    """Distribution of each numeric feature. Missingness is reported separately
-    because some of it is structural - `rente_boliglaan` is absent exactly when
-    the customer has no loan."""
+    """Range and missingness of each numeric feature, with the rule applied.
+
+    Missingness is worth reporting per feature rather than in aggregate because
+    the reasons differ: `rente_boliglaan` is structurally absent for customers
+    with no mortgage, while a missing `alder` is genuinely unknown.
+    """
     summary = df[columns].describe().T.rename(columns={"50%": "median"})
-    summary.insert(1, "missing_pct", df[columns].isna().mean() * 100)
+    missing = df[columns].isna().mean() * 100
+    summary.insert(1, "missing_pct", missing)
+    summary.insert(2, "missing_handling", [
+        "-" if missing[c] == 0 and c not in STRUCTURAL_MISSING
+        else STRUCTURAL_MISSING.get(c, "") + (DEFAULT_MISSING if missing[c] > 0 else "")
+        for c in columns
+    ])
     return summary.reset_index(names="feature")
 
 

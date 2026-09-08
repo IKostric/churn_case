@@ -17,6 +17,14 @@ from ..data.validate import SNAPSHOT_DATE, assert_within_snapshot
 
 CHANNELS = ("chat", "telefon", "e-post")
 
+# The inquiry log covers the 24 months to the snapshot, so a customer with no
+# record has not made contact in at least that long. Filling the window length
+# is what keeps `days_since_last_inquiry` readable in one direction - larger is
+# staler. The alternatives both misstate it: a median would drop these
+# customers into the middle of the distribution as though they had contacted
+# the bank about eight months ago, and 0 would claim they contacted it today.
+NEVER_CONTACTED_DAYS = 730
+
 logger = logging.getLogger(__name__)
 
 
@@ -26,7 +34,10 @@ def build_inquiry_features(henvendelser: pd.DataFrame, customer_ids: pd.Series) 
     grouped = henvendelser.groupby(CUSTOMER_ID)
     features = pd.DataFrame(index=pd.Index(customer_ids, name=CUSTOMER_ID))
     features["n_inquiries"] = grouped.size()
-    features["days_since_last_inquiry"] = (SNAPSHOT_DATE - grouped["dato"].max()).dt.days
+    recency = (SNAPSHOT_DATE - grouped["dato"].max()).dt.days
+    assert recency.max() <= NEVER_CONTACTED_DAYS, \
+        "an inquiry predates the assumed 24-month window - revisit NEVER_CONTACTED_DAYS"
+    features["days_since_last_inquiry"] = recency
 
     for window in (90, 365):
         cutoff = SNAPSHOT_DATE - pd.Timedelta(days=window)
@@ -40,10 +51,14 @@ def build_inquiry_features(henvendelser: pd.DataFrame, customer_ids: pd.Series) 
     for channel in CHANNELS:
         features[f"n_inquiries_{channel.replace('-', '_')}"] = per_channel[channel]
 
-    # Absence of a record means no contact, not missing data. days_since stays
-    # NaN, which the imputer flags - "never contacted" is not "contacted long ago".
+    # Absence of a record means no contact, not missing data: the counts are 0
+    # and the recency is the full window. n_inquiries == 0 still identifies
+    # these customers exactly, so nothing is lost by filling rather than
+    # leaving a NaN for an imputer to guess at.
     count_columns = [c for c in features.columns if c.startswith("n_inquiries")]
     features[count_columns] = features[count_columns].fillna(0.0)
+    features["days_since_last_inquiry"] = features["days_since_last_inquiry"].fillna(
+        NEVER_CONTACTED_DAYS)
 
     logger.info("inquiry metadata features: %d columns", features.shape[1])
     return features.reset_index()
